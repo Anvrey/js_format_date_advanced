@@ -8,34 +8,38 @@
  * @returns {string}
  */
 function formatDate(date, fromFormat, toFormat) {
-  const fromSep = fromFormat[3];
-  const toSep = toFormat[3];
+  const tokenSet = new Set(['YYYY', 'YY', 'MM', 'DD']);
+  const fromSep = fromFormat.find((el) => !tokenSet.has(el));
+  const toSep = toFormat.find((el) => !tokenSet.has(el));
+
+  const fromTokens = fromFormat.filter((el) => tokenSet.has(el));
+  const toTokens = toFormat.filter((el) => tokenSet.has(el));
 
   const parts = [];
   let current = '';
 
   for (let i = 0; i < date.length; i++) {
     if (date[i] === fromSep) {
-      parts[parts.length] = current;
+      parts.push(current);
       current = '';
     } else {
       current += date[i];
     }
   }
-  parts[parts.length] = current;
+  parts.push(current);
 
   const dateMap = {};
 
-  for (let i = 0; i < 3; i++) {
-    dateMap[fromFormat[i]] = parts[i];
+  for (let i = 0; i < fromTokens.length; i++) {
+    dateMap[fromTokens[i]] = parts[i];
   }
 
-  if (fromFormat.includes('YYYY') && toFormat.includes('YY')) {
+  if (fromTokens.includes('YYYY') && toTokens.includes('YY')) {
     dateMap['YY'] = dateMap['YYYY'].slice(-2);
-  } else if (fromFormat.includes('YY') && toFormat.includes('YYYY')) {
-    const yearNum = parseInt(dateMap['YY'], 10);
+  } else if (fromTokens.includes('YY') && toTokens.includes('YYYY')) {
+    const n = +dateMap['YY'];
 
-    if (yearNum < 30) {
+    if (n < 30) {
       dateMap['YYYY'] = '20' + dateMap['YY'];
     } else {
       dateMap['YYYY'] = '19' + dateMap['YY'];
@@ -44,8 +48,8 @@ function formatDate(date, fromFormat, toFormat) {
 
   const result = [];
 
-  for (let i = 0; i < 3; i++) {
-    result[result.length] = dateMap[toFormat[i]];
+  for (let i = 0; i < toTokens.length; i++) {
+    result.push(dateMap[toTokens[i]]);
   }
 
   return result.join(toSep);
